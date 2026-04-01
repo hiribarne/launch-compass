@@ -1,0 +1,438 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0a0e1a;
+  --surface: #111827;
+  --surface-hover: #1a2340;
+  --border: #1e2a4a;
+  --text: #e2e8f0;
+  --text-dim: #8892a8;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.3);
+  --danger: #ff4d4d;
+  --success: #22c55e;
+  --warning: #f59e0b;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  height: 100%;
+  position: relative;
+}
+
+/* --- Views --- */
+.view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  will-change: transform, opacity;
+}
+
+.view:not(.active) {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.view.leaving {
+  transform: translateX(-30%);
+  opacity: 0;
+}
+
+/* --- List View --- */
+#list-view header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+#list-view header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#list-view .subtitle {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+#refresh-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+#refresh-btn:active {
+  transform: rotate(180deg);
+}
+
+#launch-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* --- Launch Card --- */
+.launch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.launch-card:active {
+  transform: scale(0.98);
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+.launch-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.launch-card .mission-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.launch-card .provider {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.launch-card .status-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.status-go { background: rgba(34,197,94,0.15); color: var(--success); }
+.status-tbd { background: rgba(245,158,11,0.15); color: var(--warning); }
+.status-tbc { background: rgba(59,130,246,0.15); color: var(--accent); }
+.status-hold { background: rgba(255,77,77,0.15); color: var(--danger); }
+
+.launch-card .card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 12px;
+}
+
+.launch-card .launch-date {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.launch-card .countdown {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.launch-card .countdown.imminent {
+  color: var(--danger);
+  animation: pulse 1s infinite;
+}
+
+.launch-card .vehicle-info {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.launch-card .pad-name {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* --- Loading --- */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: var(--text-dim);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Footer --- */
+#list-view footer {
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  opacity: 0.6;
+}
+
+/* --- Compass View --- */
+#compass-view header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+#back-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#compass-header-info h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+#compass-header-info p {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+/* Countdown Bar */
+#countdown-bar {
+  text-align: center;
+  padding: 10px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: linear-gradient(180deg, rgba(59,130,246,0.08) 0%, transparent 100%);
+}
+
+#countdown-label {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+/* Compass */
+#compass-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 0;
+}
+
+#compass-ring {
+  position: relative;
+  width: min(80vw, 300px);
+  height: min(80vw, 300px);
+}
+
+#compass-svg {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.15s ease-out;
+}
+
+#compass-cardinals text {
+  fill: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+#compass-cardinals text.north {
+  fill: var(--danger);
+}
+
+#compass-ticks line {
+  stroke: var(--text-dim);
+  stroke-width: 1;
+}
+
+#compass-ticks line.major {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+#compass-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+#bearing-display {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+#bearing-unit {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+#distance-display {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* Launch details */
+#launch-details {
+  padding: 12px 20px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(30,42,74,0.4);
+  font-size: 0.85rem;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--text-dim);
+}
+
+.detail-value {
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+}
+
+/* Error */
+#compass-error {
+  text-align: center;
+  padding: 20px;
+}
+
+#compass-error p {
+  color: var(--warning);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+#request-permission-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* --- Error card --- */
+.error-card {
+  background: rgba(255,77,77,0.08);
+  border: 1px solid rgba(255,77,77,0.2);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.error-card h3 {
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.error-card button {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}

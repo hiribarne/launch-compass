@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Launch Compass — KSC</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Launch List View -->
+    <section id="list-view" class="view active">
+      <header>
+        <h1>Launch Compass</h1>
+        <p class="subtitle">Kennedy Space Center, FL</p>
+        <button id="refresh-btn" title="Refresh launches" aria-label="Refresh launches">&#x21bb;</button>
+      </header>
+      <div id="launch-list">
+        <div class="loading-spinner" id="list-spinner">
+          <div class="spinner"></div>
+          <p>Loading launches...</p>
+        </div>
+      </div>
+      <footer id="cache-status"></footer>
+    </section>
+
+    <!-- Compass View -->
+    <section id="compass-view" class="view">
+      <header>
+        <button id="back-btn" aria-label="Back to list">&larr;</button>
+        <div id="compass-header-info">
+          <h2 id="compass-mission-name"></h2>
+          <p id="compass-provider"></p>
+        </div>
+      </header>
+
+      <div id="countdown-bar">
+        <span id="countdown-label">T-</span>
+        <span id="countdown-timer"></span>
+      </div>
+
+      <div id="compass-container">
+        <div id="compass-ring">
+          <svg id="compass-svg" viewBox="0 0 300 300">
+            <!-- Outer ring -->
+            <circle cx="150" cy="150" r="140" fill="none" stroke="#1e2a4a" stroke-width="2"/>
+            <!-- Cardinal ticks & labels -->
+            <g id="compass-cardinals"></g>
+            <!-- Degree ticks -->
+            <g id="compass-ticks"></g>
+            <!-- Target arrow -->
+            <g id="target-arrow">
+              <polygon points="150,30 140,70 160,70" fill="#ff4d4d" stroke="#ff6b6b" stroke-width="1"/>
+              <line x1="150" y1="70" x2="150" y2="150" stroke="#ff4d4d" stroke-width="2" stroke-dasharray="4,4"/>
+            </g>
+          </svg>
+          <div id="compass-center">
+            <div id="bearing-display">---</div>
+            <div id="bearing-unit">&deg;</div>
+          </div>
+        </div>
+        <div id="distance-display"></div>
+      </div>
+
+      <div id="launch-details">
+        <div class="detail-row">
+          <span class="detail-label">Launch Date</span>
+          <span class="detail-value" id="detail-date"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Vehicle</span>
+          <span class="detail-value" id="detail-vehicle"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Pad</span>
+          <span class="detail-value" id="detail-pad"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Mission</span>
+          <span class="detail-value" id="detail-mission"></span>
+        </div>
+      </div>
+
+      <div id="compass-error" class="hidden">
+        <p id="compass-error-msg"></p>
+        <button id="request-permission-btn" class="hidden">Enable Compass</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
