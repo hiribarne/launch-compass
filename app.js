@@ -28,10 +28,15 @@ let selectedLaunch = null;
 let userLat = null;
 let userLon = null;
 let compassHeading = null;
+let deviceBeta = 0;
+let deviceGamma = 0;
 let watchId = null;
 let countdownInterval = null;
 let listCountdownInterval = null;
 let orientationListenerAttached = false;
+let arMode = false;
+let arStream = null;
+const CAMERA_FOV = 60; // estimated horizontal FOV in degrees
 
 // ---- DOM refs ----
 const listView = document.getElementById('list-view');
@@ -57,6 +62,21 @@ const targetArrow = document.getElementById('target-arrow');
 const compassError = document.getElementById('compass-error');
 const compassErrorMsg = document.getElementById('compass-error-msg');
 const requestPermissionBtn = document.getElementById('request-permission-btn');
+const arToggleBtn = document.getElementById('ar-toggle-btn');
+const arIconCamera = document.getElementById('ar-icon-camera');
+const arIconCompass = document.getElementById('ar-icon-compass');
+const compassContainer = document.getElementById('compass-container');
+const arContainer = document.getElementById('ar-container');
+const arVideo = document.getElementById('ar-video');
+const arTarget = document.getElementById('ar-target');
+const arTargetLabel = document.getElementById('ar-target-label');
+const arBearing = document.getElementById('ar-bearing');
+const arDistance = document.getElementById('ar-distance');
+const arOffscreenLeft = document.getElementById('ar-offscreen-left');
+const arOffscreenRight = document.getElementById('ar-offscreen-right');
+const bearingTape = document.getElementById('bearing-tape');
+const tiltWarning = document.getElementById('tilt-warning');
+const levelBubble = document.getElementById('level-bubble');
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
@@ -65,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshBtn.addEventListener('click', () => loadLaunches(true));
   backBtn.addEventListener('click', showList);
   requestPermissionBtn.addEventListener('click', requestOrientationPermission);
+  arToggleBtn.addEventListener('click', toggleArMode);
+  buildBearingTape();
 });
 
 // ---- API & Data ----
@@ -308,6 +330,7 @@ function showList() {
   selectedLaunch = null;
   clearInterval(countdownInterval);
   stopGeolocation();
+  if (arMode) toggleArMode(); // exit AR mode cleanly
 
   compassView.classList.remove('active');
   listView.classList.remove('leaving');
@@ -415,14 +438,19 @@ function attachOrientationListener() {
     if (e.webkitCompassHeading !== undefined) {
       compassHeading = e.webkitCompassHeading;
     } else if (e.alpha !== null) {
-      // On Android, alpha=0 means North when using absolute orientation
-      if (e.absolute) {
-        compassHeading = (360 - e.alpha) % 360;
-      } else {
-        compassHeading = (360 - e.alpha) % 360;
-      }
+      compassHeading = (360 - e.alpha) % 360;
     }
-    updateCompassRotation();
+
+    // Track tilt for bubble level and AR
+    if (e.beta !== null) deviceBeta = e.beta;
+    if (e.gamma !== null) deviceGamma = e.gamma;
+
+    if (arMode) {
+      updateArView();
+    } else {
+      updateBubbleLevel();
+      updateCompassRotation();
+    }
   }, true);
 }
 
@@ -463,7 +491,11 @@ function updateBearing() {
     distanceDisplay.textContent = `${distance.toFixed(1)} km to pad (${(distance * 0.621371).toFixed(1)} mi)`;
   }
 
-  updateCompassRotation();
+  if (arMode) {
+    updateArView();
+  } else {
+    updateCompassRotation();
+  }
 }
 
 function updateCompassRotation() {
@@ -540,6 +572,174 @@ function buildCompassSvg() {
     if (isMajor) line.setAttribute('class', 'major');
     ticks.appendChild(line);
   }
+}
+
+// ---- Bubble Level ----
+function updateBubbleLevel() {
+  // beta = front-back tilt (-180..180), gamma = left-right tilt (-90..90)
+  // When flat: beta ≈ 0, gamma ≈ 0
+  const maxOffset = 16; // max px offset for bubble
+  const tiltThreshold = 15; // degrees before warning
+
+  // Clamp and map to pixel offset
+  const bx = Math.max(-maxOffset, Math.min(maxOffset, (deviceGamma / 45) * maxOffset));
+  const by = Math.max(-maxOffset, Math.min(maxOffset, (deviceBeta / 45) * maxOffset));
+
+  levelBubble.style.transform = `translate(calc(-50% + ${bx}px), calc(-50% + ${by}px))`;
+
+  const isTilted = Math.abs(deviceBeta) > tiltThreshold || Math.abs(deviceGamma) > tiltThreshold;
+
+  if (isTilted) {
+    tiltWarning.classList.remove('hidden');
+    tiltWarning.classList.add('visible');
+    compassContainer.classList.add('tilted');
+    levelBubble.classList.add('off-level');
+  } else {
+    tiltWarning.classList.add('hidden');
+    tiltWarning.classList.remove('visible');
+    compassContainer.classList.remove('tilted');
+    levelBubble.classList.remove('off-level');
+  }
+}
+
+// ---- AR Mode ----
+function toggleArMode() {
+  arMode = !arMode;
+
+  if (arMode) {
+    compassContainer.classList.add('hidden');
+    arContainer.classList.remove('hidden');
+    arToggleBtn.classList.add('active');
+    arIconCamera.classList.add('hidden');
+    arIconCompass.classList.remove('hidden');
+    startCamera();
+  } else {
+    compassContainer.classList.remove('hidden');
+    arContainer.classList.add('hidden');
+    arToggleBtn.classList.remove('active');
+    arIconCamera.classList.remove('hidden');
+    arIconCompass.classList.add('hidden');
+    stopCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    arStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    arVideo.srcObject = arStream;
+  } catch (err) {
+    console.error('Camera error:', err);
+    arContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8892a8;padding:20px;text-align:center">Camera unavailable.<br>Check permissions.</div>';
+  }
+}
+
+function stopCamera() {
+  if (arStream) {
+    arStream.getTracks().forEach(t => t.stop());
+    arStream = null;
+    arVideo.srcObject = null;
+  }
+}
+
+function updateArView() {
+  if (!selectedLaunch || userLat === null || compassHeading === null) return;
+
+  const { lat, lon } = selectedLaunch.padCoords;
+  const targetBearing = calculateBearing(userLat, userLon, lat, lon);
+  const distance = calculateDistance(userLat, userLon, lat, lon);
+
+  // Bearing delta normalized to [-180, 180]
+  let delta = targetBearing - compassHeading;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  // Position target reticle
+  const halfFov = CAMERA_FOV / 2;
+  const inFov = Math.abs(delta) <= halfFov;
+
+  if (inFov) {
+    // Map delta to screen position (0% = left edge, 100% = right edge)
+    const pct = 50 + (delta / halfFov) * 50;
+    arTarget.style.left = `${pct}%`;
+    arTarget.classList.remove('hidden');
+    arOffscreenLeft.classList.add('hidden');
+    arOffscreenRight.classList.add('hidden');
+  } else {
+    arTarget.classList.add('hidden');
+    if (delta < 0) {
+      arOffscreenLeft.classList.remove('hidden');
+      arOffscreenRight.classList.add('hidden');
+    } else {
+      arOffscreenRight.classList.remove('hidden');
+      arOffscreenLeft.classList.add('hidden');
+    }
+  }
+
+  // Update target label
+  arTargetLabel.textContent = selectedLaunch.padName;
+
+  // Update info bar
+  arBearing.textContent = `${Math.round(targetBearing)}° bearing`;
+  if (distance < 1) {
+    arDistance.textContent = `${Math.round(distance * 1000)} m`;
+  } else {
+    arDistance.textContent = `${distance.toFixed(1)} km (${(distance * 0.621371).toFixed(1)} mi)`;
+  }
+
+  // Update bearing tape position
+  updateBearingTape(compassHeading, targetBearing);
+}
+
+// ---- Bearing Tape ----
+function buildBearingTape() {
+  // Build a tape from 0 to 720 degrees (doubled for seamless wrapping)
+  const cardinals = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW' };
+
+  for (let deg = 0; deg < 720; deg += 5) {
+    const tick = document.createElement('div');
+    tick.className = 'tape-tick';
+
+    const normDeg = deg % 360;
+    const isMajor = normDeg % 30 === 0;
+    const isCardinal = cardinals[normDeg] !== undefined;
+
+    if (isCardinal) {
+      const label = document.createElement('div');
+      label.className = 'tape-label cardinal';
+      label.textContent = cardinals[normDeg];
+      tick.appendChild(label);
+    } else if (isMajor) {
+      const label = document.createElement('div');
+      label.className = 'tape-label';
+      label.textContent = normDeg;
+      tick.appendChild(label);
+    }
+
+    const line = document.createElement('div');
+    line.className = `tape-tick-line ${isMajor || isCardinal ? 'major' : 'minor'}`;
+    tick.appendChild(line);
+
+    bearingTape.appendChild(tick);
+  }
+}
+
+function updateBearingTape(heading, targetBearing) {
+  // Each tick is 20px wide, 5° per tick → 4px per degree
+  const pxPerDeg = 4;
+  const tapeWidth = bearingTape.parentElement.clientWidth;
+  const offset = -(heading * pxPerDeg) + (tapeWidth / 2);
+  bearingTape.style.transform = `translateX(${offset}px)`;
+
+  // Position or update target mark on tape
+  let mark = bearingTape.querySelector('.tape-target-mark');
+  if (!mark) {
+    mark = document.createElement('div');
+    mark.className = 'tape-target-mark';
+    bearingTape.appendChild(mark);
+  }
+  mark.style.left = `${targetBearing * pxPerDeg}px`;
 }
 
 // ---- Utils ----

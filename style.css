@@ -351,6 +351,275 @@ html, body {
   color: var(--text-dim);
 }
 
+/* --- Bubble Level --- */
+#tilt-warning {
+  color: var(--warning);
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 6px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#tilt-warning.visible {
+  opacity: 1;
+}
+
+#compass-container.tilted #compass-ring {
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+#level-well {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid var(--border);
+  position: relative;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+#level-well::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  transform: translate(-50%, -50%);
+}
+
+#level-bubble {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--success);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+#level-bubble.off-level {
+  background: var(--warning);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+
+/* --- AR Toggle Button --- */
+#ar-toggle-btn {
+  margin-left: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#ar-toggle-btn.active {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* --- AR Camera View --- */
+#ar-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+#ar-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#ar-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Bearing Strip */
+#bearing-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+  overflow: hidden;
+}
+
+#bearing-tape {
+  position: absolute;
+  top: 0;
+  height: 44px;
+  white-space: nowrap;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 0.1s ease-out;
+}
+
+.tape-tick {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.tape-tick-line {
+  width: 1px;
+  background: rgba(255,255,255,0.3);
+}
+
+.tape-tick-line.major {
+  height: 14px;
+  background: rgba(255,255,255,0.7);
+}
+
+.tape-tick-line.minor {
+  height: 8px;
+}
+
+.tape-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.tape-label.cardinal {
+  color: #ff4d4d;
+  font-size: 12px;
+}
+
+.tape-target-mark {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 44px;
+  background: var(--danger);
+  transform: translateX(-1px);
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.6);
+}
+
+#bearing-strip-center {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 44px;
+  background: var(--accent);
+}
+
+/* AR Target Reticle */
+#ar-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: left 0.1s ease-out;
+}
+
+.ar-reticle-ring {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--danger);
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 12px rgba(255, 77, 77, 0.3);
+}
+
+.ar-reticle-ring::before,
+.ar-reticle-ring::after {
+  content: '';
+  position: absolute;
+  background: var(--danger);
+}
+
+.ar-reticle-ring::before {
+  width: 16px;
+  height: 2px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ar-reticle-ring::after {
+  width: 2px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ar-reticle-dot {
+  display: none;
+}
+
+#ar-target-label {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: rgba(255, 77, 77, 0.6);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Offscreen indicators */
+.ar-offscreen {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+#ar-offscreen-left { left: 12px; }
+#ar-offscreen-right { right: 12px; }
+
+/* AR Info bar */
+#ar-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+}
+
 /* Launch details */
 #launch-details {
   padding: 12px 20px 24px;

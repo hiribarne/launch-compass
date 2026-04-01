@@ -37,6 +37,16 @@
           <h2 id="compass-mission-name"></h2>
           <p id="compass-provider"></p>
         </div>
+        <button id="ar-toggle-btn" aria-label="Toggle AR camera view" title="AR Camera">
+          <svg id="ar-icon-camera" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <svg id="ar-icon-compass" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+        </button>
       </header>
 
       <div id="countdown-bar">
@@ -45,6 +55,7 @@
       </div>
 
       <div id="compass-container">
+        <div id="tilt-warning" class="hidden">Hold phone level</div>
         <div id="compass-ring">
           <svg id="compass-svg" viewBox="0 0 300 300">
             <!-- Outer ring -->
@@ -64,7 +75,32 @@
             <div id="bearing-unit">&deg;</div>
           </div>
         </div>
+        <div id="level-well">
+          <div id="level-bubble"></div>
+        </div>
         <div id="distance-display"></div>
+      </div>
+
+      <!-- AR Camera View -->
+      <div id="ar-container" class="hidden">
+        <video id="ar-video" autoplay playsinline muted></video>
+        <div id="ar-hud">
+          <div id="bearing-strip">
+            <div id="bearing-tape"></div>
+            <div id="bearing-strip-center"></div>
+          </div>
+          <div id="ar-target">
+            <div class="ar-reticle-ring"></div>
+            <div class="ar-reticle-dot"></div>
+            <div id="ar-target-label"></div>
+          </div>
+          <div id="ar-offscreen-left" class="ar-offscreen hidden">&larr; Target</div>
+          <div id="ar-offscreen-right" class="ar-offscreen hidden">Target &rarr;</div>
+          <div id="ar-info">
+            <span id="ar-bearing"></span>
+            <span id="ar-distance"></span>
+          </div>
+        </div>
       </div>
 
       <div id="launch-details">
